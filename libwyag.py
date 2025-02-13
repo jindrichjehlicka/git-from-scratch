@@ -1,6 +1,7 @@
 import argparse
 import configparser
 from datetime import datetime
+from typing import Optional
 
 # users/group DB on unix
 import grp, pwd
@@ -63,41 +64,53 @@ def main(argsv=sys.argv[1:]):
         #     print("Bad command.")
 
 
-
-class GitRepository (object):
+class GitRepository(object):
     """A git repository"""
-    
+
     worktree = None
     gitdir = None
     conf = None
-    
+
     def __init__(self, path, force=False) -> None:
         self.worktree = path
         self.gitdir = os.path.join(path, ".git")
-        
+
         if not (force or os.path.isdir(self.gitdir)):
             raise Exception(f"Not a Git repository {path}")
-        
+
         self.conf = configparser.ConfigParser()
         cf = repo_file(self, "config")
-        
+
         if cf and os.path.exists(cf):
             self.conf.read([cf])
         elif not force:
             raise Exception("Configuration file missing")
-        
+
         if not force:
             vers = int(self.conf.get("core", "repositoryformatversion"))
             if vers != 0:
                 raise Exception("Unsupported repositoryformatversion: {vers}")
-            
-            
+
         # TODO: change repo to gitdir
-        def repo_path(repo, *path):
+        def repo_path(repo, *path)->str:
             """Compute path for repo's gitdir"""
             return os.path.join(repo.gitdir, *path)
 
-            
-        def repo_file(repo, *path, mkdir =False):
-            pass
-            
+        def repo_file(repo, *path, mkdir=False)->Optional[str]:
+            if repo_dir(repo, *path[:-1], mkdir=mkdir):
+                return repo_path(repo, *path)
+
+        def repo_dir(repo, *path, mkdir=False)->Optional[str]:
+            path = repo_path(repo, *path)
+
+            if os.path.exists(path):
+                if os.path.isdir(path):
+                    return path
+                else:
+                    raise Exception(f"Not a directory {path}")
+
+            if mkdir:
+                os.makedirs(path)
+                return path
+            else:
+                return None
