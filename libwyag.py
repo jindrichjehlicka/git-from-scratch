@@ -28,8 +28,10 @@ argsubparsers.required = True
 
 argsp = argsubparsers.add_parser("init", help="Initialize a new, empty repository.")
 
+
 def cmd_init(args):
     repo_create(args.path)
+
 
 argsp.add_argument(
     "path",
@@ -37,11 +39,12 @@ argsp.add_argument(
     nargs="?",
     default=".",
     help="Where to create the repository.",
-    )
+)
+
+
 def main(argsv=sys.argv[1:]):
 
     args = argparser.parse_args(argsv)
-
 
     match args.command:
         # case "add":
@@ -110,9 +113,11 @@ def repo_path(repo, *path) -> str:
     """Compute path for repo's gitdir"""
     return os.path.join(repo.gitdir, *path)
 
+
 def repo_file(repo, *path, mkdir=False) -> Optional[str]:
     if repo_dir(repo, *path[:-1], mkdir=mkdir):
         return repo_path(repo, *path)
+
 
 def repo_dir(repo, *path, mkdir=False) -> Optional[str]:
     path = repo_path(repo, *path)
@@ -128,6 +133,7 @@ def repo_dir(repo, *path, mkdir=False) -> Optional[str]:
         return path
     else:
         return None
+
 
 def repo_create(path):
     """Create a new repository at path"""
@@ -162,6 +168,7 @@ def repo_create(path):
 
         return repo
 
+
 def repo_default_config():
     ret = configparser.ConfigParser()
 
@@ -172,17 +179,38 @@ def repo_default_config():
 
     return ret
 
-def repo_find(path = ".", required = True):
+
+def repo_find(path=".", required=True):
     path = os.path.realpath(path)
-    
+
     if os.path.isdir(os.path.join(path, ".git")):
         return GitRepository(path)
-    
-    #if we havent returned, recurse in parent
-    parent= os.path.realpath(os.path.join(path, ".."))
+
+    # if we havent returned, recurse in parent
+    parent = os.path.realpath(os.path.join(path, ".."))
     if parent == path:
         if required:
             raise Exception("No git repository")
         else:
             return None
     return repo_find(parent, required)
+
+# Generic class
+class GitObject(object):
+
+    def __init__(self, data=None):
+        if data != None:
+            self.deserialize(data)
+        else:
+            self.init()
+
+    def deserialize(self, repo):
+        raise Exception("Not Implemented!")
+
+    def serialize(self, data):
+        raise Exception("Not implemented!")
+
+    def init (self):
+        pass
+    
+    
